@@ -1,0 +1,26 @@
+# --- Ignore everything in .gitignore ---
+# If you modify anything here, remember to change it in .gitignore also!
+
+# Ignore caches
+node_modules
+.*cache
+.jest
+*.tsbuildinfo
+
+# Ignore builds
+dist
+
+# Ignore logs
+*.log
+coverage
+
+# Ignore editor generated files
+.vscode
+.idea
+.iml
+
+# Ignore OS generated files
+.DS_Store
+
+# Ignore generated files
+generated

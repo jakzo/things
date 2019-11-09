@@ -1,0 +1,43 @@
+{
+  "include": ["**/*"],
+  "exclude": ["**/node_modules/", "**/dist/"],
+  "compilerOptions": {
+    "target": "es2015",
+    "module": "commonjs",
+    "jsx": "react",
+    "lib": ["es2015"],
+    "types": ["node", "jest"],
+    "paths": {
+      "*": ["./types/*"]
+    },
+    "baseUrl": "./",
+    "rootDir": "./",
+    "resolveJsonModule": true,
+    "composite": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "declaration": true,
+    "importHelpers": true,
+    "removeComments": false,
+    "stripInternal": false,
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    "alwaysStrict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "strictFunctionTypes": false,
+    "strictNullChecks": true,
+    "strictPropertyInitialization": false
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "extensions": ["esbenp.prettier-vscode", "dbaeumer.vscode-eslint", "johnpapa.vscode-peacock"],
+  "postCreateCommand": "bolt build",
+  "dockerFile": "Dockerfile",
+  "settings": {
+    "peacock.remoteColor": "#0078D7",
+    "files.autoSave": "onFocusChange"
+  }
+}

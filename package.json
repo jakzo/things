@@ -1,0 +1,77 @@
+{
+  "name": "things",
+  "version": "0.0.1",
+  "description": "Collection of JS things.",
+  "private": true,
+  "license": "MIT",
+  "homepage": "https://github.com/jakzo/things",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jakzo/things.git"
+  },
+  "scripts": {
+    "dev": "run-p build:watch",
+    "build": "tsc -b",
+    "build:watch": "run-s \"build -w\"",
+    "format": "prettier -c '**/*.{ts,tsx,js,jsx,json}'",
+    "format:fix": "run-s \"format --write\"",
+    "jest": "jest",
+    "lint": "eslint --ext ts,tsx,js,jsx ./",
+    "lint:fix": "run-s \"lint --fix\"",
+    "test": "run-s lint format jest",
+    "util:gen-project-refs": "ts-node ./packages/tools/monorepo-tools/src/bin/gen-project-refs.ts",
+    "util:git-add-project-refs": "git add tsconfig.json '**/tsconfig.json'",
+    "lint-staged": "lint-staged",
+    "postinstall": "run-s util:gen-project-refs"
+  },
+  "engines": {
+    "node": "^10.12",
+    "npm": ">6.0.0",
+    "yarn": "^1.9.4"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "run-s lint-staged util:gen-project-refs util:git-add-project-refs",
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+    }
+  },
+  "lint-staged": {
+    "**/*.ts": [
+      "prettier -l"
+    ]
+  },
+  "bolt": {
+    "version": "^0.23",
+    "workspaces": [
+      "packages/*/*"
+    ]
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@commitlint/cli": "^8.2.0",
+    "@commitlint/config-conventional": "^8.2.0",
+    "@types/jest": "^24.0.13",
+    "@types/node": "^12.0.4",
+    "@typescript-eslint/eslint-plugin": "^2.3.2",
+    "@typescript-eslint/parser": "^2.3.2",
+    "eslint": "^5.16.0",
+    "eslint-config-prettier": "^4.3.0",
+    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-jsx-a11y": "^6.2.3",
+    "eslint-plugin-prettier": "^3.1.0",
+    "husky": "^2.3.0",
+    "jest": "^24.8.0",
+    "lint-staged": "^9.2.5",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^1.17.1",
+    "ts-jest": "^24.0.2",
+    "ts-node": "^8.2.0",
+    "ts-node-dev": "^1.0.0-pre.39",
+    "typescript": "^3.5.1"
+  }
+}

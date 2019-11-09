@@ -1,0 +1,13 @@
+// Root TSConfig used by IDE tools and for building all packages
+{
+  "extends": "./tsconfig.base",
+  "compilerOptions": {
+    // `tsc -b` is run in the project's root directory to build all packages at once but this
+    // would output them twice because `tsconfig.base.json` matches all files in the project.
+    // Using `noEmit` lets us not output them twice but also type-check every TypeScript file,
+    // including tests and scripts which are excluded from individual package TSConfigs.
+    "noEmit": true
+  },
+  // All packages (automatically updated, do not edit manually)
+  "references": []
+}
