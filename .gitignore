@@ -4,9 +4,10 @@
 node_modules
 .*cache
 .jest
-*.tsbuildinfo
+.tsbuild
 
 # Ignore builds
+built
 dist
 
 # Ignore logs

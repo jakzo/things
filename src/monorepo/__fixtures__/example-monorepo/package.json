@@ -1,0 +1,11 @@
+{
+  "version": "1.2.3",
+  "scripts": {
+    "prepare-to-publish": "monorepo prepare ./src ./dist"
+  },
+  "dependencies": {
+    "root-dep": "1",
+    "version-override-dep": "1",
+    "unused-root-dep": "1"
+  }
+}

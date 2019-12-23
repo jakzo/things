@@ -1,13 +1,41 @@
-// Root TSConfig used by IDE tools and for building all packages
 {
-  "extends": "./tsconfig.base",
+  "include": ["**/*"],
+  "exclude": ["**/node_modules/", "**/dist/", "**/built/", "**/.jest", "**/.cache"],
   "compilerOptions": {
-    // `tsc -b` is run in the project's root directory to build all packages at once but this
-    // would output them twice because `tsconfig.base.json` matches all files in the project.
-    // Using `noEmit` lets us not output them twice but also type-check every TypeScript file,
-    // including tests and scripts which are excluded from individual package TSConfigs.
-    "noEmit": true
-  },
-  // All packages (automatically updated, do not edit manually)
-  "references": []
+    "target": "es2015",
+    "module": "commonjs",
+    "jsx": "react",
+    "lib": ["es2015"],
+    "types": ["node", "jest"],
+    "baseUrl": "./",
+    "rootDir": "./",
+    "outDir": "./built/",
+    "resolveJsonModule": true,
+    "composite": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "declaration": true,
+    "importHelpers": true,
+    "removeComments": false,
+    "stripInternal": false,
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    "alwaysStrict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "strictFunctionTypes": false,
+    "strictNullChecks": true,
+    "strictPropertyInitialization": false
+  }
 }

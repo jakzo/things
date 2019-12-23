@@ -1,7 +1,7 @@
 {
   "name": "things",
   "version": "0.0.1",
-  "description": "Collection of JS things.",
+  "description": "A monorepo full of JS packages and things.",
   "private": true,
   "license": "MIT",
   "homepage": "https://github.com/jakzo/things",
@@ -10,28 +10,30 @@
     "url": "https://github.com/jakzo/things.git"
   },
   "scripts": {
-    "dev": "run-p build:watch",
+    "dev": "npm run build:watch --",
     "build": "tsc -b",
-    "build:watch": "run-s \"build -w\"",
-    "format": "prettier -c '**/*.{ts,tsx,js,jsx,json}'",
-    "format:fix": "run-s \"format --write\"",
-    "jest": "jest",
+    "build:watch": "npm run build -- -w",
+    "format": "prettier -c '**/*.{ts,tsx,js,jsx,json,md}'",
+    "format:fix": "npm run format -- --write",
     "lint": "eslint --ext ts,tsx,js,jsx ./",
-    "lint:fix": "run-s \"lint --fix\"",
-    "test": "run-s lint format jest",
-    "util:gen-project-refs": "ts-node ./packages/tools/monorepo-tools/src/bin/gen-project-refs.ts",
-    "util:git-add-project-refs": "git add tsconfig.json '**/tsconfig.json'",
+    "lint:fix": "npm run lint -- --fix",
+    "typecheck": "tsc -b",
+    "typecheck:watch": "npm run typecheck -- -w",
+    "test": "run-s lint format typecheck test:unit",
+    "test:unit": "jest --runInBand",
+    "test:unit:watch": "npm run test:unit -- --watch",
     "lint-staged": "lint-staged",
-    "postinstall": "run-s util:gen-project-refs"
+    "publish:prepare": "node ./built/src/monorepo/bin/monorepo.js"
   },
   "engines": {
-    "node": "^10.12",
+    "node": "10",
     "npm": ">6.0.0",
-    "yarn": "^1.9.4"
+    "yarn": "This project uses npm to manage dependencies",
+    "pnpm": "This project uses npm to manage dependencies"
   },
   "husky": {
     "hooks": {
-      "pre-commit": "run-s lint-staged util:gen-project-refs util:git-add-project-refs",
+      "pre-commit": "run-s lint-staged",
       "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
     }
   },
@@ -40,38 +42,62 @@
       "prettier -l"
     ]
   },
-  "bolt": {
-    "version": "^0.23",
-    "workspaces": [
-      "packages/*/*"
-    ]
-  },
   "commitlint": {
     "extends": [
       "@commitlint/config-conventional"
     ]
   },
-  "dependencies": {},
-  "devDependencies": {
+  "dependencies": {
+    "@babel/core": "^7.7.2",
+    "@babel/generator": "^7.7.4",
+    "@babel/parser": "^7.7.3",
+    "@babel/traverse": "^7.7.2",
+    "@babel/types": "^7.7.2",
     "@commitlint/cli": "^8.2.0",
     "@commitlint/config-conventional": "^8.2.0",
+    "@types/fs-extra": "^8.0.1",
     "@types/jest": "^24.0.13",
+    "@types/lodash": "^4.14.147",
+    "@types/mz": "^0.0.32",
     "@types/node": "^12.0.4",
+    "@types/prettier": "^1.18.3",
     "@typescript-eslint/eslint-plugin": "^2.3.2",
     "@typescript-eslint/parser": "^2.3.2",
+    "chalk": "^3.0.0",
+    "depcheck": "^0.9.1",
     "eslint": "^5.16.0",
     "eslint-config-prettier": "^4.3.0",
     "eslint-plugin-import": "^2.18.2",
     "eslint-plugin-jsx-a11y": "^6.2.3",
     "eslint-plugin-prettier": "^3.1.0",
+    "fs-extra": "^8.1.0",
+    "glob": "^7.1.6",
+    "glob-gitignore": "^1.0.14",
+    "globby": "^10.0.1",
+    "golden-fleece": "^1.0.9",
     "husky": "^2.3.0",
+    "ignore": "^5.1.4",
     "jest": "^24.8.0",
     "lint-staged": "^9.2.5",
+    "load-source-map": "^1.0.0",
+    "lodash": "^4.17.15",
+    "mem": "^6.0.0",
+    "mz": "^2.7.0",
     "npm-run-all": "^4.1.5",
+    "p-limit": "^2.2.1",
+    "parse-gitignore": "^1.0.1",
     "prettier": "^1.17.1",
+    "require-package-name": "^2.0.1",
+    "resolve": "^1.13.1",
+    "snake-case": "^2.1.0",
+    "source-map": "^0.7.3",
+    "source-map-resolve": "^0.5.2",
+    "source-map-url": "^0.4.0",
+    "tempy": "^0.3.0",
     "ts-jest": "^24.0.2",
     "ts-node": "^8.2.0",
     "ts-node-dev": "^1.0.0-pre.39",
-    "typescript": "^3.5.1"
+    "type-fest": "^0.8.1",
+    "typescript": "^3.7.2"
   }
 }

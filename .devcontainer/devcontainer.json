@@ -1,9 +1,12 @@
 {
   "extensions": ["esbenp.prettier-vscode", "dbaeumer.vscode-eslint", "johnpapa.vscode-peacock"],
-  "postCreateCommand": "bolt build",
+  "postCreateCommand": "zsh -ic 'npm i && npm run build'",
   "dockerFile": "Dockerfile",
+  "context": "..",
+  "workspaceMount": "/workspace",
   "settings": {
-    "peacock.remoteColor": "#0078D7",
-    "files.autoSave": "onFocusChange"
+    "peacock.remoteColor": "#30355c",
+    "files.autoSave": "onFocusChange",
+    "editor.tabSize": 2
   }
 }
