@@ -1,8 +1,8 @@
 import path from 'path';
 import { TraverseOptions } from '@babel/traverse';
 import { traverse } from '@babel/core';
-import generate from '@babel/generator';
-import { SourceLocation, StringLiteral, Node, TemplateElement, stringLiteral } from '@babel/types';
+import jsesc from 'jsesc';
+import { SourceLocation, StringLiteral, Node, TemplateElement } from '@babel/types';
 import chalk from 'chalk';
 import { resolveSourceMap as resolveSourceMapCb } from 'source-map-resolve';
 import { promisify } from 'util';
@@ -25,6 +25,7 @@ export interface Import {
   end: number;
   loc: SourceLocation;
   path: string;
+  quoteChar: string;
 }
 
 export interface ImportReplacement {
@@ -35,6 +36,11 @@ export interface ImportReplacement {
 
 export type SourceMapUpdate = { filePath: string; contents: string } | { comment: string };
 
+const quoteTypes: { [quoteChar: string]: string } = {
+  "'": 'single',
+  '"': 'double',
+  '`': 'backtick',
+};
 /** Replaces the source map comment of some file content if specified by `srcMapUpdates`. */
 const updateSourceMapComment = (
   contents: string,
@@ -93,6 +99,125 @@ export const visitors: TraverseOptions<{
   },
 };
 
+/** Returns an object representing updates to make to source maps to reflect import path changes. */
+const getSourceMapUpdates = async (
+  filePath: string,
+  contents: string,
+  replacements: ImportReplacement[],
+): Promise<SourceMapUpdate | undefined> => {
+  try {
+    const srcMap = await resolveSourceMap(contents, filePath, async (url, cb) => {
+      try {
+        const contents = await doFs(fs.readFile)(url, 'utf8');
+        cb(undefined, contents);
+      } catch (err) {
+        cb(err);
+      }
+    });
+    if (!srcMap) return undefined;
+    const srcMapConsumer = await new SourceMapConsumer(srcMap.map);
+    if (!srcMapConsumer) return undefined;
+    const srcMapGenerator = new SourceMapGenerator({
+      file: filePath,
+      sourceRoot: srcMap.sourcesRelativeTo,
+    });
+
+    const state = {
+      replacementIdx: 0,
+      curLine: 0,
+      offsetLine: 0,
+      offsetCol: 0,
+    };
+
+    const setCurLine = (lineNumberBeforeModifications: number) => {
+      const lineNum = lineNumberBeforeModifications + state.offsetLine;
+      if (state.curLine === lineNum) return;
+      state.curLine = lineNum;
+      // Reset column offset if we're on a new line without previous modifications
+      state.offsetCol = 0;
+    };
+
+    const addMapping = (mapping: MappingItem, line: number, col: number) => {
+      srcMapGenerator.addMapping({
+        generated: {
+          line: line + state.offsetLine,
+          column: col + state.offsetCol,
+        },
+        original: {
+          line: mapping.originalLine,
+          column: mapping.originalColumn,
+        },
+        source: mapping.source,
+        name: mapping.name,
+      });
+    };
+
+    srcMapConsumer.eachMapping(mapping => {
+      for (; state.replacementIdx < replacements.length; state.replacementIdx++) {
+        const {
+          originalImport: {
+            loc: { start, end },
+          },
+          code,
+        } = replacements[state.replacementIdx];
+
+        // If mapping is before node start
+        if (
+          start.line > mapping.generatedLine ||
+          (start.line === mapping.generatedLine && start.column >= mapping.generatedColumn)
+        ) {
+          // Update mapping but do not increment replacementIdx
+          break;
+        }
+
+        setCurLine(start.line);
+
+        // If mapping is inside the node
+        if (
+          end.line > mapping.generatedLine ||
+          (end.line === mapping.generatedLine && mapping.generatedColumn < end.column)
+        ) {
+          // Add mapping at start of node
+          addMapping(mapping, start.line, start.column);
+          // Do not re-add mapping and do not increment replacementIdx
+          return;
+        }
+
+        // If mapping is after end of node
+        const nodeNumLines = end.line - start.line;
+        const replacementNumLines = 0; // replacement is always a single line string
+        const removedLines = replacementNumLines - nodeNumLines;
+        state.offsetLine -= removedLines;
+
+        const replacementEndCol = start.column + code.length;
+        state.offsetCol += replacementEndCol - end.column;
+      }
+
+      // Add mapping with updated position
+      setCurLine(mapping.generatedLine);
+      addMapping(mapping, mapping.generatedLine, mapping.generatedColumn);
+    });
+
+    const updatedSrcMap = srcMapGenerator.toString();
+    if (srcMap.url) {
+      const srcMapPath = path.resolve(path.dirname(filePath), srcMap.url);
+      return { filePath: srcMapPath, contents: updatedSrcMap };
+    }
+
+    return {
+      comment:
+        // Break up comment to avoid being parsed as a source map
+        '//#' +
+        ` sourceMappingURL=data:application/json;charset=utf-8;base64,${new Buffer(
+          updatedSrcMap,
+        ).toString('base64')}`,
+    };
+  } catch {
+    // Ignore any problems with source maps
+    return undefined;
+  }
+};
+
 /**
  * Logs a warning message due to an import path being dynamically generated at runtime and
  * therefore not statically known.
@@ -125,6 +250,7 @@ export const findAllImports = (
         end: node.end,
         loc: node.loc,
         path: resolvedImportPath,
+        quoteChar: contents[node.start],
       });
     },
     onDynamicDep(node) {
@@ -143,7 +269,7 @@ export const findAllImports = (
  * based on an `importReplacer` function.
  */
 export const getImportModifications = async (
-  filePath: string,
+  filePathAbsolute: string,
   contents: string,
   imports: Import[],
   importReplacer: (importPath: string) => Promise<string | undefined>,
@@ -157,17 +283,23 @@ export const getImportModifications = async (
             ? {
                 originalImport,
                 path: newImportPath,
-                code: generate(stringLiteral(newImportPath)).code,
+                code:
+                  originalImport.quoteChar +
+                  jsesc(newImportPath, {
+                    quote: quoteTypes[originalImport.quoteChar],
+                  }) +
+                  originalImport.quoteChar,
               }
             : undefined;
         },
       ),
     )
-  ).filter<ImportReplacement>((r): r is ImportReplacement => !!r);
+  ).filter((r): r is ImportReplacement => !!r);
 
   if (replacements.length === 0) return;
 
-  const srcMapUpdates = await getSourceMapUpdates(filePath, contents, replacements);
+  // TODO: Copy source map source files into built directory as well
+  const srcMapUpdates = await getSourceMapUpdates(filePathAbsolute, contents, replacements);
 
   const parts: string[] = [];
   let pos = 0;
@@ -177,125 +309,14 @@ export const getImportModifications = async (
   }
   parts.push(contents.substring(pos));
 
-  const fileDir = path.join(filePath, '..');
-  const filename = path.dirname(filePath);
+  const fileDirAbsolute = path.dirname(filePathAbsolute);
+  const filename = path.basename(filePathAbsolute);
   const modified = updateSourceMapComment(parts.join(''), srcMapUpdates);
   return {
     [filename]: modified,
     ...(srcMapUpdates && 'filePath' in srcMapUpdates
-      ? { [path.relative(fileDir, srcMapUpdates.filePath)]: srcMapUpdates.contents }
+      ? { [path.relative(fileDirAbsolute, srcMapUpdates.filePath)]: srcMapUpdates.contents }
       : {}),
-  };
-};
-
-/** Returns an object representing updates to make to source maps to reflect import path changes. */
-const getSourceMapUpdates = async (
-  filePath: string,
-  contents: string,
-  replacements: ImportReplacement[],
-): Promise<SourceMapUpdate | undefined> => {
-  const srcMap = await resolveSourceMap(contents, filePath, async (url, cb) => {
-    try {
-      const contents = await doFs(fs.readFile)(url, 'utf8');
-      cb(undefined, contents);
-    } catch (err) {
-      cb(err);
-    }
-  });
-  if (!srcMap) return undefined;
-  const srcMapConsumer = await new SourceMapConsumer(srcMap.map, srcMap.url || undefined);
-  if (!srcMapConsumer) return undefined;
-  const srcMapGenerator = new SourceMapGenerator({
-    file: filePath,
-    sourceRoot: srcMap.sourcesRelativeTo,
-  });
-
-  const state = {
-    replacementIdx: 0,
-    curLine: 0,
-    offsetLine: 0,
-    offsetCol: 0,
-  };
-
-  const setCurLine = (lineNumberBeforeModifications: number) => {
-    const lineNum = lineNumberBeforeModifications + state.offsetLine;
-    if (state.curLine === lineNum) return;
-    state.curLine = lineNum;
-    // Reset column offset if we're on a new line without previous modifications
-    state.offsetCol = 0;
-  };
-
-  const addMapping = (mapping: MappingItem, line: number, col: number) => {
-    srcMapGenerator.addMapping({
-      generated: {
-        line: line + state.offsetLine,
-        column: col + state.offsetCol,
-      },
-      original: {
-        line: mapping.originalLine,
-        column: mapping.originalColumn,
-      },
-      source: mapping.source,
-      name: mapping.name,
-    });
-  };
-
-  srcMapConsumer.eachMapping(mapping => {
-    for (; state.replacementIdx < replacements.length; state.replacementIdx++) {
-      const {
-        originalImport: {
-          loc: { start, end },
-        },
-        code,
-      } = replacements[state.replacementIdx];
-
-      // If mapping is before node start
-      if (
-        start.line > mapping.generatedLine ||
-        (start.line === mapping.generatedLine && start.column >= mapping.generatedColumn)
-      ) {
-        // Update mapping but do not increment replacementIdx
-        break;
-      }
-
-      setCurLine(start.line);
-
-      // If mapping is inside the node
-      if (
-        end.line > mapping.generatedLine ||
-        (end.line === mapping.generatedLine && mapping.generatedColumn < end.column)
-      ) {
-        // Add mapping at start of node
-        addMapping(mapping, start.line, start.column);
-        // Do not re-add mapping and do not increment replacementIdx
-        return;
-      }
-
-      // If mapping is after end of node
-      const nodeNumLines = end.line - start.line;
-      const replacementNumLines = 0; // replacement is always a single line string
-      const removedLines = replacementNumLines - nodeNumLines;
-      state.offsetLine -= removedLines;
-
-      const replacementEndCol = start.column + code.length;
-      state.offsetCol += replacementEndCol - end.column;
-    }
-
-    // Add mapping with updated position
-    setCurLine(mapping.generatedLine);
-    addMapping(mapping, mapping.generatedLine, mapping.generatedColumn);
-  });
-
-  const updatedSrcMap = srcMapGenerator.toString();
-  if (srcMap.url) {
-    const srcMapPath = path.resolve(path.dirname(filePath), srcMap.url);
-    return { filePath: srcMapPath, contents: updatedSrcMap };
-  }
-
-  return {
-    comment: `//# sourceMappingURL=data:application/json;charset=utf-8;base64,${new Buffer(
-      updatedSrcMap,
-    ).toString('base64')}`,
   };
 };
 

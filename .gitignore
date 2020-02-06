@@ -7,7 +7,7 @@ node_modules
 .tsbuild
 
 # Ignore builds
-built
+build
 dist
 
 # Ignore logs

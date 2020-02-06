@@ -2,6 +2,7 @@ import fs from 'mz/fs';
 import path from 'path';
 import parseGitignore from 'parse-gitignore';
 import ignore, { Ignore } from 'ignore';
+
 import { fileExistsWithType, doFs } from './fs';
 
 export interface FileWalkerCommonOpts<S> {
@@ -14,13 +15,13 @@ export interface FileWalkerCommonOpts<S> {
   dir: string;
   /** State passed to `onDir`. The state returned by `onDir` will be used for child directories. */
   state: S;
-  /** `dirPath` is relative to the initial `dir`. */
-  shouldEnterDir?: (state: S, dirPath: string) => boolean;
+  /** `dirPathFromRoot` is relative to the initial `dir`. */
+  shouldEnterDir?: (state: S, dirPathFromRoot: string) => boolean;
 }
 
 export interface FileWalkerOpts<S> extends FileWalkerCommonOpts<S> {
-  /** `dirPath` is relative to the initial `dir`. */
-  onDir: (state: S, dirPath: string, filenames: string[]) => S | Promise<S>;
+  /** `dirPathFromRoot` is relative to the initial `dir`. */
+  onDir: (state: S, dirPathFromRoot: string, filenames: string[]) => S | Promise<S>;
 }
 
 /**
@@ -36,7 +37,6 @@ export const fileWalker = async <S>({
 }: FileWalkerOpts<S>) => {
   const resolvedDir = path.join(rootDir, dir);
   const dirItems = await doFs(fs.readdir)(resolvedDir);
-  // TODO: Optimize concurrency
   const itemsWithStats = await Promise.all(
     dirItems.map(async name => {
       const itemPath = path.join(resolvedDir, name);
@@ -50,11 +50,11 @@ export const fileWalker = async <S>({
     .filter(({ stats }) => stats.isDirectory())
     .map(({ name }) => path.join(dir, name));
   await Promise.all(
-    dirPaths.map(async dirPath => {
-      if (!shouldEnterDir(state, dirPath)) return;
+    dirPaths.map(async dirPathFromRoot => {
+      if (!shouldEnterDir(state, dirPathFromRoot)) return;
       await fileWalker({
         rootDir,
-        dir: dirPath,
+        dir: dirPathFromRoot,
         state: newState,
         shouldEnterDir,
         onDir,
@@ -63,13 +63,53 @@ export const fileWalker = async <S>({
   );
 };
 
+export const addGitignored = async (dir: string, initialIgnored = ignore()) => {
+  const contents = await doFs(fs.readFile)(path.join(dir, '.gitignore'), 'utf8');
+  const rules = parseGitignore(contents);
+  return ignore()
+    .add(initialIgnored)
+    .add(rules);
+};
+
+/** Includes `from` but doesn't include `to`. */
+export function* pathsFromTo(from: string, to: string) {
+  let curPath = from;
+  const partsAfter = to
+    .substring(from.length)
+    .split(path.sep)
+    .slice(1);
+  for (const part of partsAfter) {
+    yield curPath;
+    curPath += path.sep + part;
+  }
+}
+
+export const initGitignored = async (
+  rootDir: string,
+  targetDir: string,
+  initialIgnored = ignore(),
+) => {
+  let ignored = initialIgnored;
+  for (const dir of pathsFromTo(rootDir, targetDir)) {
+    const gitignorePath = path.join(dir, '.gitignore');
+    if (!(await fileExistsWithType(gitignorePath, false))) continue;
+    ignored = await addGitignored(dir, ignored);
+  }
+  return ignored;
+};
+
 export interface FileWalkerWithIgnoreOpts<S> extends FileWalkerCommonOpts<S> {
   /** Glob of files and directories to ignore. */
   ignoreGlobs?: string[];
   /** Ignore files listed in `.gitignore` files. */
   ignoreGitignored?: boolean;
-  /** `dirPath` is relative to `rootDir`. */
-  onDir: (state: S, dirPath: string, filenames: string[], ignored: Ignore) => S | Promise<S>;
+  /** `dirPathFromRoot` is relative to `rootDir`. */
+  onDir: (
+    state: S,
+    dirPathFromRoot: string,
+    filenames: string[],
+    ignored: Ignore,
+  ) => S | Promise<S>;
 }
 
 /** `fileWalker` but accepts a list of globs to ignore. */
@@ -91,52 +131,17 @@ export const fileWalkerWithIgnore = async <S>({
       ignored: initialIgnored.add(ignoreGlobs),
       state,
     },
-    shouldEnterDir: (state, dirPath) =>
-      !state.ignored.ignores(dirPath) && shouldEnterDir(state.state, dirPath),
-    async onDir(state, dirPath, filenames) {
+    shouldEnterDir: (state, dirPathFromRoot) =>
+      !state.ignored.ignores(dirPathFromRoot) && shouldEnterDir(state.state, dirPathFromRoot),
+    async onDir(state, dirPathFromRoot, filenames) {
       const newIgnored =
         ignoreGitignored && filenames.includes('.gitignore')
-          ? await addGitignored(path.join(rootDir, dirPath), state.ignored)
+          ? await addGitignored(path.join(rootDir, dirPathFromRoot), state.ignored)
           : state.ignored;
       return {
         ignored: newIgnored,
-        state: await onDir(state.state, dirPath, newIgnored.filter(filenames), newIgnored),
+        state: await onDir(state.state, dirPathFromRoot, newIgnored.filter(filenames), newIgnored),
       };
     },
   });
 };
-
-export const addGitignored = async (dir: string, initialIgnored = ignore()) => {
-  const contents = await doFs(fs.readFile)(path.join(dir, '.gitignore'), 'utf8');
-  const rules = parseGitignore(contents);
-  return ignore()
-    .add(initialIgnored)
-    .add(rules);
-};
-
-export const initGitignored = async (
-  rootDir: string,
-  targetDir: string,
-  initialIgnored = ignore(),
-) => {
-  let ignored = initialIgnored;
-  for (const dir of pathsFromTo(rootDir, targetDir)) {
-    const gitignorePath = path.join(dir, '.gitignore');
-    if (!(await fileExistsWithType(gitignorePath, false))) continue;
-    ignored = await addGitignored(dir, ignored);
-  }
-  return ignored;
-};
-
-/** Includes `from` but doesn't include `to`. */
-export function* pathsFromTo(from: string, to: string) {
-  let curPath = from;
-  const partsAfter = to
-    .substring(from.length)
-    .split(path.sep)
-    .slice(1);
-  for (const part of partsAfter) {
-    yield curPath;
-    curPath += path.sep + part;
-  }
-}

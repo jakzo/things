@@ -23,7 +23,7 @@
     "test:unit": "jest --runInBand",
     "test:unit:watch": "npm run test:unit -- --watch",
     "lint-staged": "lint-staged",
-    "publish:prepare": "node ./built/src/monorepo/bin/monorepo.js"
+    "publish:prepare": "node --inspect-brk ./build/src/package-splitter/bin/package-splitter.js prepare -b ./build/src/"
   },
   "engines": {
     "node": "10",
@@ -33,7 +33,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "run-s lint-staged",
+      "pre-commit": "lint-staged",
       "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
     }
   },
@@ -57,10 +57,13 @@
     "@commitlint/config-conventional": "^8.2.0",
     "@types/fs-extra": "^8.0.1",
     "@types/jest": "^24.0.13",
+    "@types/jsesc": "^2.5.0",
     "@types/lodash": "^4.14.147",
     "@types/mz": "^0.0.32",
     "@types/node": "^12.0.4",
     "@types/prettier": "^1.18.3",
+    "@types/react": "^16.9.19",
+    "@types/semver": "^6.2.0",
     "@typescript-eslint/eslint-plugin": "^2.3.2",
     "@typescript-eslint/parser": "^2.3.2",
     "chalk": "^3.0.0",
@@ -70,6 +73,7 @@
     "eslint-plugin-import": "^2.18.2",
     "eslint-plugin-jsx-a11y": "^6.2.3",
     "eslint-plugin-prettier": "^3.1.0",
+    "eslint-plugin-react": "^7.18.0",
     "fs-extra": "^8.1.0",
     "glob": "^7.1.6",
     "glob-gitignore": "^1.0.14",
@@ -77,7 +81,9 @@
     "golden-fleece": "^1.0.9",
     "husky": "^2.3.0",
     "ignore": "^5.1.4",
+    "isomorphic-git": "^0.78.3",
     "jest": "^24.8.0",
+    "jsesc": "^2.5.2",
     "lint-staged": "^9.2.5",
     "load-source-map": "^1.0.0",
     "lodash": "^4.17.15",
@@ -87,8 +93,11 @@
     "p-limit": "^2.2.1",
     "parse-gitignore": "^1.0.1",
     "prettier": "^1.17.1",
+    "react": "^16.12.0",
     "require-package-name": "^2.0.1",
     "resolve": "^1.13.1",
+    "semver": "^7.1.1",
+    "simple-git": "^1.131.0",
     "snake-case": "^2.1.0",
     "source-map": "^0.7.3",
     "source-map-resolve": "^0.5.2",
@@ -97,7 +106,9 @@
     "ts-jest": "^24.0.2",
     "ts-node": "^8.2.0",
     "ts-node-dev": "^1.0.0-pre.39",
+    "tslib": "^1.10.0",
     "type-fest": "^0.8.1",
-    "typescript": "^3.7.2"
+    "typescript": "^3.7.2",
+    "yargs": "^15.0.2"
   }
 }

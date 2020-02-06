@@ -13,14 +13,11 @@ const globalFsLimit = pLimit(4);
 export const doFs = <F extends (...args: unknown[]) => Promise<unknown>>(fsFunc: F): F =>
   ((...args: Parameters<F>) => globalFsLimit(() => fsFunc(...args))) as any;
 
+export const DEFAULT_IGNORE_GLOBS = ['node_modules', '.git'];
+
 export const JS_EXTENSIONS = new Set(['ts', 'tsx', 'js', 'jsx', 'mjs', 'node']);
 export const isJsFile = (filename: string) =>
   JS_EXTENSIONS.has(path.extname(filename).substring(1)) && !filename.endsWith('.d.ts');
-
-export const readPackageJsonFromDir = async (dir: string) => {
-  const packageJsonPath = path.join(dir, 'package.json');
-  return readPackageJson(packageJsonPath);
-};
 
 export const readPackageJson = async (packageJsonPath: string): Promise<PackageJson> => {
   if (!(await doFs(fs.exists)(packageJsonPath))) {
@@ -32,6 +29,11 @@ export const readPackageJson = async (packageJsonPath: string): Promise<PackageJ
   } catch (err) {
     throw new Error(`Failed to parse ${packageJsonPath}: ${err}`);
   }
+};
+
+export const readPackageJsonFromDir = async (dir: string) => {
+  const packageJsonPath = path.join(dir, 'package.json');
+  return readPackageJson(packageJsonPath);
 };
 
 export const readdirWithStats = async (dirPath: string) => {
@@ -52,3 +54,8 @@ export const fileExistsWithType = async (filePath: string, isDir: boolean) => {
     return false;
   }
 };
+
+// TODO: pnpm accepts YAML package.json files, other logic will need to prioritize package.json
+//       files over package.yaml files...
+const packageJsonFilenames = ['package.json'];
+export const isFilenamePackageJson = (filename: string) => packageJsonFilenames.includes(filename);

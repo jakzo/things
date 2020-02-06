@@ -5,6 +5,5 @@ export { Package, PackageProps } from './package';
 
 export const buildAndPublishPackages = async (opts: MonorepoProps) => {
   const monorepo = new Monorepo(opts);
-  await monorepo.prepare();
-  // await monorepo.publish();
+  await monorepo.publish();
 };
