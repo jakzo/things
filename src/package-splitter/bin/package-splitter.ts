@@ -8,8 +8,8 @@ import { runCommandInPackages } from '../util/commands';
 yargs
   .usage('Usage: $0 <command> [options]')
   .command(
-    'prepare',
-    'prepare packages for publishing',
+    'publish',
+    'split project and publish individual packages',
     {
       sourceDir: {
         alias: 's',
@@ -38,14 +38,20 @@ yargs
         describe:
           'gitignore-style glob pattern of files and directories to ignore when collecting files to publish, option can appear multiple times to use multiple globs',
       },
+      packageNamePrefix: {
+        alias: 'p',
+        default: '',
+        describe: 'string to insert at the start of all inferred package names',
+      },
     },
-    async ({ rootDir, sourceDir, buildDir, outputDir, ignoreGlob }) => {
+    async ({ rootDir, sourceDir, buildDir, outputDir, ignoreGlob, packageNamePrefix }) => {
       const monorepo = new Monorepo({
         rootDir,
         srcDir: sourceDir,
         buildDir,
         publishDir: outputDir,
         ignoreGlobs: ignoreGlob,
+        packageNamePrefix,
       });
       await monorepo.validateConfig();
       await monorepo.publish();

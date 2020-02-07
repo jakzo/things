@@ -80,6 +80,7 @@ export class Package {
       'cpu',
       'browser',
       'engines',
+      'type',
       // TODO: What are the implications of copying this to modules?
       'resolutions',
     ]);

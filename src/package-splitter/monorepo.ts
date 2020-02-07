@@ -126,7 +126,9 @@ export class Monorepo {
     ]);
 
     // Check if any packages were not found in the build directory
-    const missingPackages = Object.values(packageMap).filter(pkg => !pkg.isFoundInBuildDir);
+    const missingPackages = Object.values(packageMap).filter(
+      pkg => !pkg.isFoundInBuildDir && !pkg.packageJson.private,
+    );
     if (missingPackages.length > 0) {
       throw new Error(
         [
@@ -149,8 +151,12 @@ export class Monorepo {
 
     // Publish packages to npm
     for (const relativePath of packagePathsToPublish) {
-      const { pkg } = packageMap[relativePath];
-      await publishPkg(path.join(publishDir, pkg.getPathRelativeToSrc()));
+      const { packageJson, publishDirName } = packageMap[relativePath];
+      if (packageJson.private) {
+        console.warn(`Package is private, not publishing: ${packageJson.name}`);
+        continue;
+      }
+      await publishPkg(path.join(publishDir, publishDirName));
     }
   }
 
@@ -162,6 +168,8 @@ export class Monorepo {
       deps: new Set(),
       publishDirName: '',
       isFoundInBuildDir: false,
+      parent: undefined,
+      children: [],
     };
     const packageMap: PackageMap = {};
     const packageTree: PackageTree = {
@@ -196,7 +204,10 @@ export class Monorepo {
             .replace('@', '')
             .replace('/', '__'),
           isFoundInBuildDir: false,
+          parent: parent.info,
+          children: [],
         };
+        parent.info.children.push(packageInfo);
         const packagePathFromSrc = path.relative(
           this.srcDir,
           path.join(this.rootDir, dirPathFromRoot),
@@ -232,7 +243,7 @@ export class Monorepo {
           ? packageMap[dirPathFromSrc]
           : parent;
 
-        if (!packageInfo || packageInfo.packageJson.private) return packageInfo;
+        if (!packageInfo) return packageInfo;
 
         packageInfo.isFoundInBuildDir = true;
 
@@ -334,7 +345,7 @@ export class Monorepo {
           )) {
             const modifiedFileOutputPathAbsolute = path.join(
               tempDir,
-              packageInfo.pkg.getPathRelativeToSrc(),
+              packageInfo.publishDirName,
               filePathFromPackage,
               '..',
               modifiedFilePathRelativeToOriginal,

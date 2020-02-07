@@ -12,24 +12,23 @@ const getNpmRegistry = () =>
     : process.env.npm_config_registry;
 
 export const publishPackage = async (preparedPackagePath: string): Promise<void> =>
-  console.log('Publishing package at:', preparedPackagePath);
-// globalNpmLimit(
-//   () =>
-//     new Promise((resolve, reject) => {
-//       const proc = spawn('npm', ['publish'], {
-//         cwd: preparedPackagePath,
-//         env: Object.assign({}, process.env, {
-//           // eslint-disable-next-line @typescript-eslint/camelcase
-//           npm_config_registry: getNpmRegistry(),
-//         }),
-//         stdio: 'inherit',
-//       });
-//       proc.on('close', code => {
-//         if (code === 0) resolve();
-//         else reject(new Error(`npm failed with code: ${code}`));
-//       });
-//     }),
-// );
+  globalNpmLimit(
+    () =>
+      new Promise((resolve, reject) => {
+        const proc = spawn('npm', ['publish', '--access', 'public'], {
+          cwd: preparedPackagePath,
+          env: Object.assign({}, process.env, {
+            // eslint-disable-next-line @typescript-eslint/camelcase
+            npm_config_registry: getNpmRegistry(),
+          }),
+          stdio: 'inherit',
+        });
+        proc.on('close', code => {
+          if (code === 0) resolve();
+          else reject(new Error(`npm failed with code: ${code}`));
+        });
+      }),
+  );
 
 export const getCurrentPackageVersion = async (packageName: string): Promise<string | undefined> =>
   globalNpmLimit(

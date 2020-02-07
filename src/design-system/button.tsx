@@ -1,6 +1,8 @@
 import React, { FC } from 'react';
 
-import { DesignSystem } from '../stdi/interfaces';
+export interface DesignSystem {
+  x: number;
+}
 
 export interface ButtonProps {
   onClick(): void;

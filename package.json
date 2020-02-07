@@ -1,5 +1,5 @@
 {
-  "name": "things",
+  "name": "@jakzo/things",
   "version": "0.0.1",
   "description": "A monorepo full of JS packages and things.",
   "private": true,
@@ -23,7 +23,7 @@
     "test:unit": "jest --runInBand",
     "test:unit:watch": "npm run test:unit -- --watch",
     "lint-staged": "lint-staged",
-    "publish:prepare": "node --inspect-brk ./build/src/package-splitter/bin/package-splitter.js prepare -b ./build/src/"
+    "publish": "node ./build/src/package-splitter/bin/package-splitter.js publish -b ./build/src/ -p '@jakzo/'"
   },
   "engines": {
     "node": "10",

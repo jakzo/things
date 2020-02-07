@@ -49,6 +49,7 @@ Below are the default values for `package.json` files:
 | `version`      | The latest version published on npm, or `0.0.1` if it is not published.                    |
 | `dependencies` | Packages which are imported in the code are added to the list of dependencies.             | If the package has a source file containing `import x from 'some-module';` then `some-module` will be added to `dependencies`. |
 | `engines`      | The `engines` field of the parent `package.json`.                                          | If the root `package.json` has `"engines": { "node": "12" }` then a package will inherit the same `engines` value.             |
+| `type`         | The `type` field of the parent `package.json`.                                             | If the root `package.json` has `"type": "module"` then a package will inherit the same `type` value.                           |
 
 **Dependencies**
 

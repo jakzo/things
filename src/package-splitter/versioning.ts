@@ -7,7 +7,7 @@ import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
 
-import { PackageMap } from './types';
+import { PackageMap, PackageInfo } from './types';
 import { Monorepo } from './monorepo';
 import { getCurrentPackageVersion } from './npm';
 
@@ -26,6 +26,9 @@ export const getReleaseTypeFromConventionalCommit = (message: string): ReleaseTy
     : /^feat(\([^)]+\))?:/.test(message)
     ? 'minor'
     : 'patch';
+
+const releaseTypeIsGreater = (a: ReleaseType, b: ReleaseType) =>
+  semver.gt(semver.inc(DEFAULT_VERSION, a)!, semver.inc(DEFAULT_VERSION, b)!);
 
 export const updatePackageJsonVersionsAndGetPackagesToPublish = async (
   monorepo: Monorepo,
@@ -47,7 +50,7 @@ export const updatePackageJsonVersionsAndGetPackagesToPublish = async (
   );
 
   // List packages to publish
-  const packageReleaseTypes: { [pathFromRootToPackage: string]: ReleaseType } = {};
+  const packageReleaseTypes: { [pathFromSrcToPackage: string]: ReleaseType } = {};
   for (const commit of commitsSinceLastPublish) {
     const commitReleaseType = getReleaseTypeFromConventionalCommit(commit.message);
     const affectedPackages = commit.files.reduce((affectedPackages, filePath) => {
@@ -58,8 +61,20 @@ export const updatePackageJsonVersionsAndGetPackagesToPublish = async (
     }, new Set<string>());
     for (const pathFromSrcToPackage of affectedPackages) {
       const existingReleaseType = packageReleaseTypes[pathFromSrcToPackage];
-      if (!existingReleaseType || semver.gt(commitReleaseType, existingReleaseType)) {
+      if (!existingReleaseType || releaseTypeIsGreater(commitReleaseType, existingReleaseType)) {
         packageReleaseTypes[pathFromSrcToPackage] = commitReleaseType;
+        // Also publish packages where a dependency has changed
+        let parent: PackageInfo | undefined = packageMap[pathFromSrcToPackage];
+        while (parent && parent.pkg !== monorepo.rootPackage) {
+          const parentPathRelativeToSrc = parent.pkg.getPathRelativeToSrc();
+          if (
+            !packageReleaseTypes[parentPathRelativeToSrc] ||
+            releaseTypeIsGreater(commitReleaseType, packageReleaseTypes[parentPathRelativeToSrc])
+          ) {
+            packageReleaseTypes[parentPathRelativeToSrc] = commitReleaseType;
+          }
+          parent = parent.parent;
+        }
       }
     }
   }
@@ -78,6 +93,5 @@ export const updatePackageJsonVersionsAndGetPackagesToPublish = async (
     if (newVersion) packageJson.version = newVersion;
   }
 
-  console.log({ packageReleaseTypes });
   return Object.keys(packageReleaseTypes);
 };

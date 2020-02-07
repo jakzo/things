@@ -10,6 +10,8 @@ export interface PackageInfo {
   deps: Set<PackageInfo | string>;
   publishDirName: string;
   isFoundInBuildDir: boolean;
+  parent?: PackageInfo;
+  children: PackageInfo[];
 }
 
 export interface PackageMap {
