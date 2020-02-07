@@ -15,7 +15,7 @@ test('end-to-end', async () => {
     publishDir,
     ignoreGlobs: ['dist'],
   });
-  await monorepo.publish(async () => {});
+  await monorepo.publish({ publishPkg: async () => {} });
 
   const modPackageJsonPath = path.join(publishDir, 'a', 'package.json');
   expect(await fse.pathExists(modPackageJsonPath)).toBe(true);

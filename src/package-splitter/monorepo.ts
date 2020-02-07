@@ -12,6 +12,7 @@ import {
   isJsFile,
   doFs,
   fileExistsWithType,
+  readdirWithStats,
 } from './util/fs';
 import { ImportPathResolver, PackageInfo, PackageMap, PackageTree } from './types';
 import { getImportModifications, findAllImports, isBuiltinNodeModule } from './imports';
@@ -115,7 +116,13 @@ export class Monorepo {
   }
 
   /** Prepares all packages in the monorepo for publishing and saves files to `publishDir`, then publishes. */
-  async publish(publishPkg = publishPackage): Promise<void> {
+  async publish({
+    dryRun = false,
+    publishPkg = publishPackage,
+  }: {
+    dryRun?: boolean;
+    publishPkg?: (preparedPackagePath: string) => Promise<void>;
+  } = {}): Promise<void> {
     const tempDir = tempy.directory();
 
     const { packageMap, packageTree } = await this.getAllPackages();
@@ -148,6 +155,8 @@ export class Monorepo {
     await fse.move(tempDir, publishDir);
 
     console.log(`Built files saved to: ${publishDir}`);
+
+    if (dryRun) return;
 
     // Publish packages to npm
     for (const relativePath of packagePathsToPublish) {
@@ -239,9 +248,8 @@ export class Monorepo {
       onDir: async (parent, dirPathFromRoot, filenames) => {
         const dirPathAbsolute = path.join(this.rootDir, dirPathFromRoot);
         const dirPathFromSrc = path.relative(this.getBuildDir(), dirPathAbsolute);
-        const packageInfo = packageMap.hasOwnProperty(dirPathFromSrc)
-          ? packageMap[dirPathFromSrc]
-          : parent;
+        const isPackageRoot = packageMap.hasOwnProperty(dirPathFromSrc);
+        const packageInfo = isPackageRoot ? packageMap[dirPathFromSrc] : parent;
 
         if (!packageInfo) return packageInfo;
 
@@ -362,6 +370,19 @@ export class Monorepo {
             ...generatedBinaries,
             ...explicitBinaries,
           };
+        }
+
+        if (isPackageRoot && !filenames.some(name => name.toLowerCase() === 'readme.md')) {
+          const packageSrcRootFiles = await readdirWithStats(packageInfo.pkg.getAbsolutePath());
+          const readmeFilename = packageSrcRootFiles.find(
+            ({ name }) => name.toLowerCase() === 'readme.md',
+          )?.name;
+          if (readmeFilename) {
+            await doFs(fse.copy)(
+              path.join(packageInfo.pkg.getAbsolutePath(), readmeFilename),
+              path.join(tempDir, packageInfo.publishDirName, readmeFilename),
+            );
+          }
         }
 
         return packageInfo;

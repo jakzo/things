@@ -83,7 +83,7 @@ export const updatePackageJsonVersionsAndGetPackagesToPublish = async (
   for (const [pathFromSrcToPackage, releaseType] of Object.entries(packageReleaseTypes)) {
     const { packageJson } = packageMap[pathFromSrcToPackage];
     const explicitVersion = packageJson.version;
-    if (explicitVersion) continue;
+    if (explicitVersion || packageJson.private) continue;
 
     const currentVersion = await getCurrentPackageVersion(packageJson.name!);
     if (!currentVersion) {

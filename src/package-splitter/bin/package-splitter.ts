@@ -43,8 +43,13 @@ yargs
         default: '',
         describe: 'string to insert at the start of all inferred package names',
       },
+      dryRun: {
+        alias: 'd',
+        default: false,
+        describe: 'build output files but do not publish packages to npm',
+      },
     },
-    async ({ rootDir, sourceDir, buildDir, outputDir, ignoreGlob, packageNamePrefix }) => {
+    async ({ rootDir, sourceDir, buildDir, outputDir, ignoreGlob, packageNamePrefix, dryRun }) => {
       const monorepo = new Monorepo({
         rootDir,
         srcDir: sourceDir,
@@ -54,7 +59,9 @@ yargs
         packageNamePrefix,
       });
       await monorepo.validateConfig();
-      await monorepo.publish();
+      await monorepo.publish({
+        dryRun,
+      });
     },
   )
   .command(

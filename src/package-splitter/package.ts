@@ -68,7 +68,6 @@ export class Package {
     partialPackageJson: PackageJson,
   ): Promise<PackageJson> {
     const parentProperties = pick(parentPackageJson, [
-      'version',
       'bugs',
       'license',
       'licenses',
