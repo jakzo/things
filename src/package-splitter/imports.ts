@@ -226,8 +226,8 @@ export const warnOnDynamicDep = (filePath: string, loc: SourceLocation | null): 
   console.error(
     chalk.yellow(
       'Warning: Cannot find dependency due to dynamic require at',
-      path.relative(process.cwd(), filePath),
-      ...(loc ? ['@', `${loc.start.line}:${loc.start.column}`] : []),
+      path.relative(process.cwd(), filePath) +
+        (loc ? `:${loc.start.line}:${loc.start.column}` : ''),
     ),
   );
 };

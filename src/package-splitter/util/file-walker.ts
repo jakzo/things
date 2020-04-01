@@ -3,6 +3,7 @@ import path from 'path';
 import parseGitignore from 'parse-gitignore';
 import ignore, { Ignore } from 'ignore';
 
+import { MaybePromise } from '../../util-types';
 import { fileExistsWithType, doFs } from './fs';
 
 export interface FileWalkerCommonOpts<S> {
@@ -21,7 +22,7 @@ export interface FileWalkerCommonOpts<S> {
 
 export interface FileWalkerOpts<S> extends FileWalkerCommonOpts<S> {
   /** `dirPathFromRoot` is relative to the initial `dir`. */
-  onDir: (state: S, dirPathFromRoot: string, filenames: string[]) => S | Promise<S>;
+  onDir: (state: S, dirPathFromRoot: string, filenames: string[]) => MaybePromise<S>;
 }
 
 /**
@@ -109,7 +110,7 @@ export interface FileWalkerWithIgnoreOpts<S> extends FileWalkerCommonOpts<S> {
     dirPathFromRoot: string,
     filenames: string[],
     ignored: Ignore,
-  ) => S | Promise<S>;
+  ) => MaybePromise<S>;
 }
 
 /** `fileWalker` but accepts a list of globs to ignore. */

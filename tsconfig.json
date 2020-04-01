@@ -2,6 +2,11 @@
   "include": ["**/*"],
   "exclude": ["**/node_modules/", "**/dist/", "**/build/", "**/.jest", "**/.cache"],
   "compilerOptions": {
+    "plugins": [
+      { "transform": "typescript-is/lib/transform-inline/transformer" },
+      { "transform": "ts-transformer-keys/transformer" }
+    ],
+
     "target": "es2018",
     "module": "commonjs",
     "jsx": "react",
@@ -25,7 +30,7 @@
     "experimentalDecorators": true,
     "strict": true,
     "noImplicitAny": true,
-    "allowUnreachableCode": false,
+    "allowUnreachableCode": true,
     "allowUnusedLabels": false,
     "alwaysStrict": true,
     "forceConsistentCasingInFileNames": true,
@@ -33,7 +38,7 @@
     "noImplicitReturns": true,
     "noImplicitThis": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    "noUnusedParameters": false,
     "strictFunctionTypes": false,
     "strictNullChecks": true,
     "strictPropertyInitialization": false

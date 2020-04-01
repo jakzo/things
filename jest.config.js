@@ -17,4 +17,9 @@ module.exports = {
   testPathIgnorePatterns: ['/node_modules/', '/dist/', '/.tsbuild/'],
   watchPathIgnorePatterns: ['/node_modules/', '/dist/'],
   testRegex: '/__tests__/.+\\.test\\.(?:ts|tsx)$',
+  globals: {
+    'ts-jest': {
+      compiler: 'ttypescript',
+    },
+  },
 };

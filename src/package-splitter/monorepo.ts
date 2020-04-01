@@ -52,7 +52,6 @@ export interface MonorepoProps {
   importPathResolver?: ImportPathResolver;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface Monorepo extends MonorepoProps {}
 
 export class Monorepo {

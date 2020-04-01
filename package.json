@@ -9,27 +9,29 @@
     "type": "git",
     "url": "https://github.com/jakzo/things.git"
   },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
+  },
   "scripts": {
-    "dev": "npm run build:watch --",
-    "build": "tsc -b",
-    "build:watch": "npm run build -- -w",
+    "dev": "yarn build:watch",
+    "build": "ttsc -b",
+    "build:watch": "yarn build -w",
     "format": "prettier -c '**/*.{ts,tsx,js,jsx,json,md}'",
-    "format:fix": "npm run format -- --write",
-    "lint": "eslint --ext ts,tsx,js,jsx ./",
-    "lint:fix": "npm run lint -- --fix",
-    "typecheck": "tsc -b",
-    "typecheck:watch": "npm run typecheck -- -w",
+    "format:fix": "yarn format --write",
+    "lint": "ts-node -C ttypescript ./src/project-config/bin/project-config.ts lint",
+    "lint2": "eslint --ext ts,tsx,js,jsx ./",
+    "lint:fix": "yarn lint --fix",
+    "typecheck": "yarn build",
+    "typecheck:watch": "yarn typecheck -w",
     "test": "run-s lint format typecheck test:unit",
     "test:unit": "jest --runInBand",
-    "test:unit:watch": "npm run test:unit -- --watch",
+    "test:unit:watch": "yarn test:unit --watch",
     "lint-staged": "lint-staged",
     "publish": "node ./build/src/package-splitter/bin/package-splitter.js publish -b ./build/src/ -p '@jakzo/'"
   },
   "engines": {
     "node": "10",
-    "npm": ">6.0.0",
-    "yarn": "This project uses npm to manage dependencies",
-    "pnpm": "This project uses npm to manage dependencies"
+    "yarn": "~1.19"
   },
   "husky": {
     "hooks": {
@@ -48,13 +50,14 @@
     ]
   },
   "dependencies": {
-    "@babel/core": "^7.7.2",
-    "@babel/generator": "^7.7.4",
-    "@babel/parser": "^7.7.3",
-    "@babel/traverse": "^7.7.2",
-    "@babel/types": "^7.7.2",
+    "@babel/core": "^7.8.4",
+    "@babel/generator": "^7.8.4",
+    "@babel/parser": "^7.8.4",
+    "@babel/traverse": "^7.8.4",
+    "@babel/types": "^7.8.3",
     "@commitlint/cli": "^8.2.0",
     "@commitlint/config-conventional": "^8.2.0",
+    "@types/eslint": "^6.1.8",
     "@types/fs-extra": "^8.0.1",
     "@types/jest": "^24.0.13",
     "@types/jsesc": "^2.5.0",
@@ -104,11 +107,14 @@
     "source-map-url": "^0.4.0",
     "tempy": "^0.3.0",
     "ts-jest": "^24.0.2",
-    "ts-node": "^8.2.0",
+    "ts-node": "^8.6.2",
     "ts-node-dev": "^1.0.0-pre.39",
+    "ts-transformer-keys": "^0.4.1",
     "tslib": "^1.10.0",
+    "ttypescript": "^1.5.10",
     "type-fest": "^0.8.1",
-    "typescript": "^3.7.2",
+    "typescript": "^3.7.5",
+    "typescript-is": "^0.13.1",
     "yargs": "^15.0.2"
   }
 }

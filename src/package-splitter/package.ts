@@ -16,7 +16,6 @@ export interface PackageProps {
   relativePath: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface Package extends PackageProps {}
 
 export class Package {
@@ -80,6 +79,7 @@ export class Package {
       'browser',
       'engines',
       'type',
+      'publishConfig',
       // TODO: What are the implications of copying this to modules?
       'resolutions',
     ]);

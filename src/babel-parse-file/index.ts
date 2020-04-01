@@ -10,6 +10,11 @@ export const parse = (filePathOrName: string, contents: string, showWarning = fa
   try {
     return babelParse(contents, {
       sourceType: 'module',
+      allowAwaitOutsideFunction: true,
+      allowImportExportEverywhere: true,
+      allowReturnOutsideFunction: true,
+      allowSuperOutsideMethod: true,
+      allowUndeclaredExports: true,
       plugins: [
         ...(isTypescript ? typescriptPlugins : []),
         'jsx',
@@ -18,7 +23,7 @@ export const parse = (filePathOrName: string, contents: string, showWarning = fa
         'classProperties',
         'classPrivateProperties',
         'classPrivateMethods',
-        ['decorators', { decoratorsBeforeExport: true }],
+        ['decorators', { decoratorsBeforeExport: false }],
         // not decorators-legacy
         'doExpressions',
         'dynamicImport',
@@ -35,6 +40,8 @@ export const parse = (filePathOrName: string, contents: string, showWarning = fa
         'optionalChaining',
         ['pipelineOperator', { proposal: 'minimal' }],
         'throwExpressions',
+        'v8intrinsic',
+        'partialApplication',
       ],
     });
   } catch (err) {
