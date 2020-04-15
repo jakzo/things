@@ -26,7 +26,6 @@
     "test": "run-s lint format typecheck test:unit",
     "test:unit": "jest --runInBand",
     "test:unit:watch": "yarn test:unit --watch",
-    "test:unit:debug": "yarn run --inspect jest --runInBand --watch",
     "lint-staged": "lint-staged",
     "publish": "node ./build/src/package-splitter/bin/package-splitter.js publish -b ./build/src/ -p '@jakzo/'"
   },
@@ -48,12 +47,6 @@
   "commitlint": {
     "extends": [
       "@commitlint/config-conventional"
-    ]
-  },
-  "workspaces": {
-    "packages": [
-      "packages/*/*",
-      "packages/*"
     ]
   },
   "dependencies": {
@@ -89,6 +82,7 @@
     "glob-gitignore": "^1.0.14",
     "globby": "^10.0.1",
     "golden-fleece": "^1.0.9",
+    "husky": "^2.3.0",
     "ignore": "^5.1.4",
     "isomorphic-git": "^0.78.3",
     "jest": "^24.8.0",

@@ -5,6 +5,7 @@ node_modules
 .*cache
 .jest
 .tsbuild
+.yarn
 
 # Ignore builds
 build

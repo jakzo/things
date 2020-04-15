@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
+    />
+    <title>Jakzo Game?</title>
+    <script src="../dist"></script>
+    <style>
+      html,
+      body,
+      canvas {
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        margin: 0;
+        overflow: hidden;
+        font-family: Arial, sans-serif;
+        background: #000;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="root"></canvas>
+    <script>
+      initGame({
+        canvas: document.getElementById("root")
+      });
+    </script>
+  </body>
+</html>

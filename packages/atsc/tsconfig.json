@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "target": "ES2019",
+    "lib": ["ES2019"],
+    "types": ["node", "jest"],
+    "sourceMap": true,
+    "inlineSourceMap": true
+  }
+}

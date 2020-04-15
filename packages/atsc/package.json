@@ -1,0 +1,16 @@
+{
+  "name": "@jakzo/atsc",
+  "description": "Advanced TypeScript Compiler.",
+  "main": "./dist/index.js",
+  "bin": "./dist/bin/atsc.js",
+  "scripts": {},
+  "dependencies": {
+    "tslib": "^1.11.1"
+  },
+  "devDependencies": {
+    "typescript": "^3.8.3"
+  },
+  "peerDependencies": {
+    "typescript": "^3.8.3"
+  }
+}
