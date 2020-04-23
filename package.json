@@ -31,7 +31,7 @@
     "publish": "node ./build/src/package-splitter/bin/package-splitter.js publish -b ./build/src/ -p '@jakzo/'"
   },
   "engines": {
-    "node": "10",
+    "node": "12",
     "yarn": "~1.19"
   },
   "husky": {
@@ -122,5 +122,8 @@
     "typescript": "^3.7.5",
     "typescript-is": "^0.13.1",
     "yargs": "^15.0.2"
+  },
+  "devDependencies": {
+    "@yarnpkg/pnpify": "^2.0.0-rc.20"
   }
 }
