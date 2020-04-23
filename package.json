@@ -34,12 +34,6 @@
     "node": "12",
     "yarn": "~1.19"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged",
-      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
-    }
-  },
   "lint-staged": {
     "**/*.ts": [
       "prettier -l"
@@ -124,6 +118,7 @@
     "yargs": "^15.0.2"
   },
   "devDependencies": {
-    "@yarnpkg/pnpify": "^2.0.0-rc.20"
+    "@yarnpkg/pnpify": "^2.0.0-rc.20",
+    "husky": "^4.2.5"
   }
 }
