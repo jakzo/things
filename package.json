@@ -84,7 +84,7 @@
     "globby": "^10.0.1",
     "golden-fleece": "^1.0.9",
     "ignore": "^5.1.4",
-    "isomorphic-git": "^0.78.3",
+    "isomorphic-git": "^1.8.2",
     "jest": "^24.8.0",
     "jsesc": "^2.5.2",
     "lint-staged": "^9.2.5",
