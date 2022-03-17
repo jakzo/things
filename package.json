@@ -100,7 +100,7 @@
     "require-package-name": "^2.0.1",
     "resolve": "^1.13.1",
     "semver": "^7.1.1",
-    "simple-git": "^1.131.0",
+    "simple-git": "^3.3.0",
     "snake-case": "^2.1.0",
     "source-map": "^0.7.3",
     "source-map-resolve": "^0.5.2",
